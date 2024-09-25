@@ -1,0 +1,314 @@
+﻿@page "/participantaddress/{parReference:long}"
+@* @attribute [Route(RouteCatalog.participantAddress)]{parReference:long} *@
+
+@inject DialogService dialogService
+
+@inject IStringLocalizer<ResMessage> resMessage
+@inject IStringLocalizer<ResParticipantAddress> resParticipantAddress
+@inject IStringLocalizer<ResDomainParticipants> resDomainParticipants
+
+@inject CheckAuthToken _authToken
+@inject SecurityAuthState authState
+
+@inject gP2Navigation navigation
+
+@inject IGenericTableCatalogRepository _genericCatalog
+@inject IGenericTableStatusRepository _genericStatus
+@inject IDataBinderRepository _dataBinder
+@inject IParticipantAddressRepository _participantAddress
+
+<PageTitle>@resDomainParticipants.GetString("wrdgP2os"). @resParticipantAddress.GetString("wrdParticipantAddress")</PageTitle>
+
+<RadzenStack Gap="0.1rem" Orientation="Orientation.Vertical" JustifyContent="JustifyContent.SpaceBetween" Style="height: 100%;">
+    <RadzenStack>
+        <RadzenRow>
+            <RadzenColumn SizeMD="12" class="rz-p-4 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                <RadzenRow>
+                    <RadzenColumn SizeMD="7" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdCountry") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenDropDown @bind-Value=@participantAddress.ead_cryReference Name="parBirthcryReference"
+                                                Data=@countries TextProperty="@nameof(Country.CryName)" ValueProperty="@nameof(Country.CryReference)"
+                                                Multiple=false AllowClear=false Chips=false 
+                                                Style="width: 100%;"
+                                                ReadOnly="@userIsReadOnly" Change="FilterCountry" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn SizeMD="5" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdZipCode") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenTextBox @bind-Value="@participantAddress.ead_AddressZipCode" Name="ZipCodeEx"
+                                               Style="width: 100%;" MaxLength="16"
+                                               ReadOnly="@userIsReadOnly" Visible="@(!isBrazil)"/>
+                                <RadzenMask @bind-Value=@participantAddress.ead_AddressZipCode Name ="ZipCodeBr"
+                                            Mask="*****-***" CharacterPattern="[0-9]" Placeholder="00000-000"
+                                            Style="width: 100%;"
+                                            ReadOnly="@userIsReadOnly" Visible="@isBrazil" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                <RadzenRow>
+                    <RadzenColumn SizeMD="7" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdAddress") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenTextBox @bind-Value="@participantAddress.ead_AddressStreet" Name="AddressStreet"
+                                               Style="width: 100%;" MaxLength="128"
+                                               ReadOnly="@userIsReadOnly" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn SizeMD="2" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdNumber") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenNumeric @bind-Value="@participantAddress.ead_AddressNumber" Name="AddressNumber" Min="0" Max="999999"
+                                               Style="width: 100%;"
+                                               ReadOnly="@userIsReadOnly" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn SizeMD="3" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdSupplement") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenTextBox @bind-Value="@participantAddress.ead_AddressSupplement" Name="AddressSupplement"
+                                               Style="width: 100%;" MaxLength="32"
+                                               ReadOnly="@userIsReadOnly" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                <RadzenRow>
+                    <RadzenColumn SizeMD="6" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdNeighborhood") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenTextBox @bind-Value="@participantAddress.ead_AddressNeighborhood" Name="AddressNeighborhood"
+                                               Style="width: 100%;" MaxLength="64"
+                                               ReadOnly="@userIsReadOnly" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn SizeMD="6" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdDistrict") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenTextBox @bind-Value="@participantAddress.ead_AddressDistrict" Name="AddressDistrict"
+                                               Style="width: 100%;" MaxLength="64"
+                                               ReadOnly="@userIsReadOnly" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                <RadzenRow>
+                    <RadzenColumn SizeMD="12" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdCity") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenDropDown @bind-Value=@participantAddress.ead_cryReference Name="AddressCityReference"
+                                                Data=@cities TextProperty="@nameof(City.CtyName)" ValueProperty="@nameof(City.CtyReference)"
+                                                Multiple=false AllowClear=false Chips=false 
+                                                Style="width: 100%;"
+                                                ReadOnly="@userIsReadOnly" Visible="@(isBrazil)" />
+                                <RadzenDropDown @bind-Value=@addressState Name="AddressState"
+                                                Data=@states TextProperty="@nameof(State.SteName)" ValueProperty="@nameof(State.SteReference)"
+                                                Multiple=false AllowClear=false Chips=false 
+                                                Style="width: 100%;"
+                                                ReadOnly="@userIsReadOnly" Visible="@(isBrazil)" Change="FilterCities" />
+                                <RadzenTextBox @bind-Value="@participantAddress.ead_AddressCity" Name="AddressCity"
+                                               Style="width: 100%;" MaxLength="128"
+                                               ReadOnly="@userIsReadOnly" Visible="@(!isBrazil)" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                <RadzenRow>
+                    <RadzenColumn SizeMD="4" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdAddressType") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenDropDown @bind-Value=@participantAddress.ead_gtvAddressType Name="AddressType"
+                                                Data=@catalogAddressType TextProperty="@nameof(CatalogResponse.title)" ValueProperty="@nameof(CatalogResponse.code)"
+                                                Multiple=false AllowClear=false Chips=false 
+                                                Style="width: 100%;"
+                                                ReadOnly="@userIsReadOnly" Visible="@(isVisible)" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn SizeMD="4" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdAddressMain") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenDropDown @bind-Value=@participantAddress.ead_MainAddress Name="AddressMain"
+                                                Data=@statusResponsesAnswer TextProperty="@nameof(StatusResponse.title)" ValueProperty="@nameof(StatusResponse.code)"
+                                                Multiple=false AllowClear=false Chips=false
+                                                Style="width: 100%;"
+                                                ReadOnly="@userIsReadOnly" Visible="@(isVisible)" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn SizeMD="4" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                        <RadzenFormField Text=@resParticipantAddress.GetString("wrdAddressGDPR") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                         Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenDropDown @bind-Value=@participantAddress.ead_LGPDStatus Name="AddressLGPD"
+                                                Data=@catalogAddressLGPD TextProperty="@nameof(CatalogResponse.title)" ValueProperty="@nameof(CatalogResponse.code)"
+                                                Multiple=false AllowClear=false Chips=false
+                                                Style="width: 100%;"
+                                                ReadOnly="@userIsReadOnly" Visible="@(isVisible)" />
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" 
+                     Gap="1rem" class="rz-py-1" Style="margin-top:0.1rem;">
+            <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="save" Text=@resMessage.GetString("wrdSave") Variant="Radzen.Variant.Flat" 
+                          class="rz-border-radius-3" 
+                          Click="@SaveRecord" />
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" Text=@resMessage.GetString("wrdCancel") Variant="Radzen.Variant.Flat" 
+                          class="rz-border-radius-3" 
+                          Click="@((args) => dialogService.Close(true))" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenStack>
+
+
+@code{
+
+    #region Setup
+
+    [Parameter] 
+    public long parReference { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private voParticipantAddress participantAddress = new voParticipantAddress();   // Need Initialization
+
+    protected bool userIsReadOnly = false;
+    protected bool userIsGDPR = false;
+    protected bool isVisible = true;
+    protected int resLanguageId = 0;
+
+    private List<Country> countries;
+    private bool isBrazil = true;
+
+    private int addressState = 1;
+    private List<State> states;
+
+    private List<City> cities;
+
+    private List<StatusResponse> statusResponsesAnswer;
+
+    private List<CatalogResponse> catalogAddressType;
+    private List<CatalogResponse> catalogAddressLGPD;
+
+    #endregion
+
+    #region System Events
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetGenericTables();
+        await GetDataBinderTables();
+        await GetParticipantAddress();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) { return; }
+        if (await _authToken.CheckAuthenticationTokenAsync()) { return; }
+        if (authenticationState is not null)
+        {
+            var authentState = await authenticationState;
+            authState.Initialize(authentState);
+        }
+        userIsReadOnly = authState.IsInRole("READONLY");
+    }
+
+    #endregion
+
+    #region Dimensional Tables
+
+    private async Task GetGenericTables()
+    {
+        var stRequest = new StatusRequest { LanguageId = resLanguageId };
+
+        var catRequest = new CatalogRequest { LanguageId = resLanguageId };
+
+        stRequest.Reference = 6;
+        statusResponsesAnswer = await _genericStatus.GetStatusAsync(stRequest);
+
+        catRequest.Reference = 2;
+        catalogAddressType = await _genericCatalog.GetCatalogValueAsync(catRequest);
+
+        catRequest.Reference = 19;
+        catalogAddressLGPD = await _genericCatalog.GetCatalogValueAsync(catRequest);
+    }
+
+    private async Task GetDataBinderTables()
+    {
+        var dbindRequest = new DataBinderRequest { Status = 1 };
+
+        countries = await _dataBinder.GetCountriesAsync(dbindRequest);
+        states = await _dataBinder.GetStatesAsync(dbindRequest);
+        cities = await _dataBinder.GetCitiesAsync(dbindRequest);
+    }
+
+    protected void FilterCountry()
+    {
+        isBrazil = (participantAddress.ead_cryReference == 1);
+        if (isBrazil)
+        {
+            participantAddress.ead_AddressCity = "";
+            return;
+        }
+        participantAddress.ead_AddressctyReference = 0;
+        addressState = 0;
+    }
+
+    protected async Task FilterCities()
+    {
+        var dbindRequest = new DataBinderRequest { Reference = addressState };
+        cities = await _dataBinder.GetCitiesAsync(dbindRequest);
+    }
+
+    #endregion
+
+    #region Address Events
+
+    private async Task GetParticipantAddress()
+    {
+        var addressRequest = new AddressRequest()
+            {
+                addressOrigin = AddressOrigin.Participant,
+                Reference = parReference,
+                addressType = AddressType.Residential,
+                isMainAddress = true,
+            };
+        participantAddress = await _participantAddress.GetParticipantAddress(addressRequest);
+        FilterCountry();
+        if (isBrazil)
+        {
+            var dbindRequest = new DataBinderRequest { Reference = participantAddress.ead_cryReference};
+            addressState = await _dataBinder.GetCityStateAsync(dbindRequest);
+            await FilterCities();
+        }
+    }
+
+    protected async Task SaveRecord()
+    {
+        await _participantAddress.UpdateParticipantAddress(participantAddress);
+        dialogService.Close();
+    }
+
+    #endregion
+}
+

@@ -1,0 +1,59 @@
+﻿@inject ReportService reportService
+@if (isReady)
+{
+    <WebReportContainer WebReport="@webReport" />
+}
+@code {
+    protected bool isReady { get; set; } = false;
+
+    protected WebReport webReport { get; set; }
+    protected Report reportBoard { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (isReady) { return; }
+
+        string reportFilename = reportService.ReportFilename;
+        if (string.IsNullOrEmpty(reportFilename)) { return; }
+
+        ToolbarSettings toolbar = new ToolbarSettings()
+            {
+                ShowRefreshButton = false,
+                Color = System.Drawing.Color.DarkOrange,
+                DropDownMenuColor = System.Drawing.Color.LightGoldenrodYellow,
+                IconColor = IconColors.Black,
+                Position = Positions.Top,
+                IconTransperency = IconTransparencyEnum.Low,
+                Exports = new ExportMenuSettings()
+                {
+                    ExportTypes = Exports.Pdf | Exports.Csv | Exports.XmlExcel | Exports.Excel2007,
+                },
+            };
+
+        reportBoard = Report.FromFile(reportFilename);
+        reportBoard.RegisterData(reportService.ReportDataSet, reportService.ReportDSSchema);
+
+        string sXMLGlobalization =
+            ReportActions.GetXMLReportSetup(reportBoard.FileName,
+                                            ReportActions.XMLReportSetup.Globalization,
+                                            reportService.resLanguageId);
+
+        reportBoard.SetParameterValue("DataSchema", "");
+        reportBoard.SetParameterValue("resGlobalization", sXMLGlobalization);
+        reportBoard.SetParameterValue("resLanguageID", reportService.resLanguageId);
+        reportBoard.SetParameterValue("UserID", reportService.userId);
+        reportBoard.SetParameterValue("UserName", reportService.userName);
+        reportBoard.SetParameterValue("inDate", DateTime.Now);
+
+        webReport = new WebReport
+            {
+                Zoom = 1.5f,
+                Toolbar = toolbar,
+                EmbedPictures = true,
+                Report = reportBoard,
+                Outline = false,
+            };
+
+        isReady = true;
+    }
+}

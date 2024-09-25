@@ -1,0 +1,38 @@
+﻿@page "/3eb96d1c61a10b6e2b27364eeeb622c0c8d5bcee6a55d5ac340ab5e22c9a5d40"
+@inject gP2Navigation navigation
+@inject ReportService reportService
+@inject IStringLocalizer<ResMessage> resMessage
+
+@rendermode InteractiveServer 
+
+<PageTitle>@resMessage.GetString("wrdReportGenerator").ToString()</PageTitle>
+
+<RadzenStack Gap="0.1rem">
+    <RadzenCard class="rz-m-1 rz-py-3 rz-border-radius-1">
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn SizeMD="8">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Wrap="FlexWrap.Wrap" Gap="1rem">
+                    <RadzenButton Click="@ReturnCaller" Text=@resMessage.GetString("wrdReturn").ToString().ToUpper()
+                                    Shade="Shade.Lighter" ButtonStyle="ButtonStyle.Light" class="rz-border-radius-2"
+                                    Icon="assignment_return" Size="ButtonSize.Medium">
+                    </RadzenButton>
+                    <RadzenLabel Text="@reportService.ReportTitle">
+                    </RadzenLabel>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="4" Style="text-align:right;">
+                <h2>@resMessage.GetString("wrdPreviewReport").ToString().ToUpper()</h2>
+            </RadzenColumn>  
+        </RadzenRow>
+    </RadzenCard>
+    <RadzenCard class="rz-m-1 rz-border-radius-1">
+        <FastReportViewer/>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private void ReturnCaller()
+    {
+        navigation.NavigateBack();
+    }
+}

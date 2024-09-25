@@ -1,0 +1,751 @@
+@attribute [Route(RouteCatalog.participantRecord)]
+
+@inject DialogService dialogService
+@inject IJSRuntime jsRuntime
+
+@inject IStringLocalizer<ResMessage> resMessage
+@inject IStringLocalizer<ResParticipant> resParticipant
+@inject IStringLocalizer<ResDomainParticipants> resDomainParticipants
+
+@inject gP2Navigation navigation
+
+@inject HelperAuthToken _helperToken
+@inject CheckAuthToken _authToken
+@inject SecurityAuthState _authState
+@inject ReportService _reportService
+
+@inject IGenericTableCatalogRepository _genericCatalog
+@inject IGenericTableStatusRepository _genericStatus
+@inject IDataBinderRepository _dataBinder
+@inject IUserDataSchemaRepository _userDataSchema;
+@inject IParticipantRepository _participant
+@inject IParticipantAddressRepository _participantAddress
+
+<PageTitle>@resDomainParticipants.GetString("wrdgP2os"). @resDomainParticipants.GetString("wrdParticipantManager")</PageTitle>
+
+<RadzenStack Gap="0.1rem">
+    <RadzenCard>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenText Text=@resParticipant.GetString("wrdParticipants") TextStyle="TextStyle.H3" TagName="TagName.H1" style="margin: 0" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton Icon="add_circle_outline" Text=@resMessage.GetString("wrdAdd") Click="@AddRecord" Variant="Radzen.Variant.Flat" ButtonStyle="ButtonStyle.Success"
+                                  Size="ButtonSize.Medium" Shade="Shade.Darker" class="rz-border-radius-3"
+                                  Disabled="@userIsReadOnly" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+    <RadzenCard class="rz-py-1">
+        <RadzenRow AlignItems="AlignItems.Center" class="rz-mx-3">
+            <RadzenColumn SizeMD="8">
+                <RadzenTextBox @bind-Value="@search" Placeholder=@resMessage.GetString("wrdSearchDot") style="display: block; width: 100%" 
+                               aria-label=@resParticipant.GetString("wrdSearchParticipant") />
+            </RadzenColumn>
+            <RadzenColumn SizeMD="3">
+                <RadzenDropDown @bind-Value=@fieldSearch Data=@fieldsSearch TextProperty="@nameof(RecordSearch.fieldName)" ValueProperty="@nameof(RecordSearch.fieldNumber)" 
+                                Style="width: 100%;"/>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="1">
+                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="search" Size="ButtonSize.Medium" style="display: block; width: 100%"
+                              Shade="Shade.Lighter" Variant="Radzen.Variant.Flat" class="rz-border-radius-3"
+                              Click="@Search" @onclick:stopPropagation="true" IsBusy="@isSearching" />
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenRow Gap="0.1rem">
+            <RadzenColumn SizeMD="@sizeMD" >
+                <RadzenCard style="height: auto; width: 100%">
+                    <RadzenDataGrid @ref="gridParticipant" Data="@participants" TItem="Participant" @bind-Value=@selectedParticipants
+                                    IsLoading="@isLoading" ColumnWidth="200px"
+                                    AllowFiltering="false" FilterMode="FilterMode.Advanced" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" 
+                                    AllowPaging="true" PageSize="6" ShowPagingSummary="true" PagingSummaryFormat=@resMessage.GetString("msgPageSummary") 
+                                    Count="@count" PagerAlwaysVisible="true" PagerHorizontalAlign="HorizontalAlign.Center"
+                                    AllowSorting="true" Style="--rz-grid-selected-background-color: purple; --rz-grid-selected-color: white;"
+                                    SelectionMode="DataGridSelectionMode.Single" 
+                                    RowDoubleClick="@SelectRecord"
+                                    @onclick:stopPropagation="true">
+                        <EmptyTemplate>
+                            <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">@resMessage.GetString("wrdNoRecords").</p>
+                        </EmptyTemplate>
+                        <Columns>
+                            <RadzenDataGridColumn TItem="Participant" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+                                <Template>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="update" Size="ButtonSize.Medium"
+                                                  Shade="Shade.Lighter" Variant="Radzen.Variant.Flat" class="rz-border-radius-3"
+                                                  Click="@EditRecord" @onclick:stopPropagation="true" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="Participant" Property="par_Reference" Title=@resParticipant.GetString("wrdReference") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_Name" Title=@resParticipant.GetString("wrdName") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_BirthDate" Title=@resParticipant.GetString("wrdBirthDate") FormatString="{0:d}" />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_AffiliationMotherName" Title=@resParticipant.GetString("wrdAffiliationMother") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_CellPhonePrivate" Title=@resParticipant.GetString("wrdPrivatePhone") />
+                            <RadzenDataGridColumn TItem="Participant" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+                                <Template>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium"
+                                                  Shade="Shade.Lighter" Variant="Radzen.Variant.Flat" class="rz-border-radius-3"
+                                                  Click="@DeleteRecord" @onclick:stopPropagation="true" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+                <RadzenCard class="my-2">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+                        <RadzenDropDown @bind-Value="@reportNumber" Data=@reports TextProperty="reportTitle" ValueProperty="reportNumber" ReadOnly="@isRunning"
+                                        Style="width: 100%; max-width: 400px;" />
+                        <RadzenButton Click="@GenerateReport" Text=@resMessage.GetString("wrdPrint").ToString().ToUpper() ReadOnly="@isRunning"
+                                      Shade="Shade.Lighter" ButtonStyle="ButtonStyle.Light" IsBusy="@isRunning" BusyText=@resMessage.GetString("wrdGenerating") 
+                                      Disabled="@(reportNumber == 0)"
+                                      Icon="print" Size="ButtonSize.Medium" class="rz-border-radius-2" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="8">
+                <RadzenCard Visible="@showEditFrame">
+                    <RadzenStack>
+                        <RadzenText Text="@editModeMessage" TextStyle="TextStyle.H5" style="text-align:right;" />
+                    </RadzenStack>
+                    <RadzenRow>
+                        <RadzenColumn SizeMD="6">
+                            <RadzenStack>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdName") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_Name" Name="par_Name"
+                                                       ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdIncorporationDate") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDatePicker style="display: block; width: 100%" @bind-Value="@participant.par_IncorporationDate" Name="par_IncorporationDate"
+                                                          DateFormat="d" ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdMainOccupation") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDropDown @bind-Value=@participant.par_occReference Name="paroccReference"
+                                                        Data=@occupations TextProperty="@nameof(Occupation.OccTitle)" ValueProperty="@nameof(Occupation.OccReference)" 
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: 100%"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdMonthlyIncome") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenNumeric style="display: block; width: 100%" @bind-Value="@participant.par_MonthlyIncome" Name="par_MonthlyIncome" Format=",0.00"
+                                                       ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdPEP") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDropDown @bind-Value=@participant.par_PEP Name="parPEP"
+                                                        Data=@statusResponsesAnswer TextProperty="@nameof(StatusResponse.title)" ValueProperty="@nameof(StatusResponse.code)" 
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: 100%"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdPEPReason") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_PEPReason" Name="parPEPReason"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdLegalRepName") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_LegalRepresentativeName" Name="parLegalRepresentativeName"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdLegalRepDoc") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_LegalRepresentativeDocument" Name="parLegalRepresentativeDocument"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdContactNotes") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_ContactNotes" Name="parContactNotes"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn SizeMD="6">
+                            <RadzenStack>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdGender") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDropDown @bind-Value=@participant.par_gtvGender Name="pargtvGender"
+                                                        Data=@catalogGenders TextProperty="@nameof(CatalogResponse.title)" ValueProperty="@nameof(CatalogResponse.code)"
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: 100%"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdBirthDate") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDatePicker style="display: block; width: 100%" @bind-Value="@participant.par_BirthDate" Name="par_BirthDate"
+                                                          DateFormat="d" ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdBirthCountry") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDropDown @bind-Value=@participant.par_BirthcryReference Name="parBirthcryReference"
+                                                        Data=@countries TextProperty="@nameof(Country.CryName)" ValueProperty="@nameof(Country.CryReference)"
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: 100%"
+                                                        ReadOnly="@userIsReadOnly" Change="FilterBirthPlace" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdBirthCity") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDropDown @bind-Value=@participant.par_BirthctyReference Name="parBirthctyReference"
+                                                        Data=@cities TextProperty="@nameof(City.CtyName)" ValueProperty="@nameof(City.CtyReference)"
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: auto"
+                                                        ReadOnly="@userIsReadOnly" Visible="@(isBrazil)"/>
+                                        <RadzenDropDown @bind-Value=@stateBirth Name="stateBirth"
+                                                        Data=@states TextProperty="@nameof(State.SteName)" ValueProperty="@nameof(State.SteReference)"
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: 100px"
+                                                        ReadOnly="@userIsReadOnly" Visible="@(isBrazil)" Change="FilterCities" />
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_BirthForeignPlace" Name="parBirthForeignPlace"
+                                                       ReadOnly="@userIsReadOnly" Visible="@(!isBrazil)" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdMaritalStatus") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenDropDown @bind-Value=@participant.par_gtvMaritalStatus Name="pargtvMaritalStatus"
+                                                        Data=@catalogMaritalStatuses TextProperty="@nameof(CatalogResponse.title)" ValueProperty="@nameof(CatalogResponse.code)"
+                                                        Multiple=false AllowClear=false Chips=false Style="display: block; width: 100%"
+                                                        ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdSpouseName") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_SpouseName" Name="parSpouseName"
+                                                       ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdAffiliationFather") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_AffiliationFatherName" Name="parAffiliationFatherName"
+                                                       ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdAffiliationMother") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenTextBox style="display: block; width: 100%" @bind-Value="@participant.par_AffiliationMotherName" Name="parAffiliationMotherName"
+                                                       ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdPrivatePhone") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenMask style="display: block; width: 100%" @bind-Value=@participant.par_CellPhonePrivate Name="parCellPhonePrivate"
+                                                    Mask="(**) *****-****" CharacterPattern="[0-9]" Placeholder="(00) 00000-0000"
+                                                    ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                                <RadzenFormField Text=@resParticipant.GetString("wrdBusinessPhone") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false">
+                                    <ChildContent>
+                                        <RadzenMask style="display: block; width: 100%" @bind-Value=@participant.par_PhoneBusiness Name="parPhoneBusiness"
+                                                    Mask="(**) ****-****" CharacterPattern="[0-9]" Placeholder="(00) 0000-0000"
+                                                    ReadOnly="@userIsReadOnly" />
+                                    </ChildContent>
+                                </RadzenFormField>
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    <RadzenCard>
+                        <RadzenRow>
+                            <RadzenColumn SizeMD="9" class="rz-py-1" Style="margin-top:0.1rem;">
+                                <RadzenButton ButtonStyle="@buttonStyleAd" Icon="home" Text=@resParticipant.GetString("wrdAddress") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" 
+                                              Click="@CallAddress" Disabled="@(!isEditMode)" />
+                                <RadzenButton ButtonStyle="@buttonStyleDc" Icon="badge" Text=@resParticipant.GetString("wrdDocument") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" 
+                                              Click="@CallDocument" Disabled="@(!isEditMode)" Visible="false" />
+                                <RadzenButton ButtonStyle="@buttonStyleBA" Icon="universal_currency" Text=@resParticipant.GetString("wrdBankAccount") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" 
+                                              Click="@CallBankAccount" Disabled="@(!isEditMode)" Visible="false" />
+                            </RadzenColumn>
+                            <RadzenColumn SizeMD="3" class="rz-py-1" Style="margin-top:0.1rem;" >
+                                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="save" Text=@resMessage.GetString("wrdSave") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" Click="@SaveRecord" />
+                                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" Text=@resMessage.GetString("wrdCancel") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" Click="@CancelEdit" />
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenCard>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+    <RadzenCard Visible="@showMessage" class="rz-mt-0 rz-p-0">
+        <RadzenAlert Shade="Radzen.Shade.Dark" Variant="Radzen.Variant.Filled" Size="Radzen.AlertSize.Medium"
+                        AlertStyle="Radzen.AlertStyle.Danger" class="rz-p-0">
+            @errorMessage
+        </RadzenAlert>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+
+    #region Setup
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private RadzenDataGrid<Participant> gridParticipant;
+    private int sizeMD = 12;
+    protected bool userIsReadOnly = false;
+    protected int resLanguageId = 0;
+
+    private IList<Participant> selectedParticipants;
+    private List<Participant> participants;
+    private Participant participant;
+
+    private List<StatusResponse> statusResponsesActive;
+    private List<StatusResponse> statusResponsesAnswer;
+
+    private List<CatalogResponse> catalogGenders;
+    private List<CatalogResponse> catalogMaritalStatuses;
+
+    private List<Occupation> occupations;
+    private List<Country> countries;
+    private bool isBrazil = true;
+
+    private int stateBirth = 1;
+    private List<State> states;
+
+    private List<City> cities;
+
+    protected record RecordSearch(int fieldNumber, string fieldName);
+    protected List<RecordSearch> fieldsSearch;
+    protected int fieldSearch = 1;
+    protected bool isSearching = false;
+
+    protected ButtonStyle buttonStyleAd {get; set; } = ButtonStyle.Dark;
+    protected ButtonStyle buttonStyleDc { get; set; } = ButtonStyle.Dark;
+    protected ButtonStyle buttonStyleBA { get; set; } = ButtonStyle.Dark;
+
+    #endregion
+
+    #region System Events
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        LoadRecordSearch();
+        GetReports();
+        navigation.SaveRoute();
+        await GetGenericTables();
+        await GetDataBinderTables();
+        await SelectAllParticipant();
+        isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) { return; }
+        if (await _authToken.CheckAuthenticationTokenAsync()) { return; }
+        if (authenticationState is not null)
+        {
+            var authentState = await authenticationState;
+            _authState.Initialize(authentState);
+        }
+        userIsReadOnly = _authState.IsInRole("READONLY");
+    }
+
+    #endregion
+
+    #region Dimensional Tables
+
+    private async Task GetGenericTables()
+    {
+        var stRequest = new StatusRequest { LanguageId = resLanguageId };
+
+        stRequest.Reference = 1;
+        statusResponsesActive = await _genericStatus.GetStatusAsync(stRequest);
+
+        stRequest.Reference = 6;
+        statusResponsesAnswer = await _genericStatus.GetStatusAsync(stRequest);
+
+        var catRequest = new CatalogRequest { LanguageId = resLanguageId };
+
+        catRequest.Reference = 4;
+        catalogGenders = await _genericCatalog.GetCatalogValueAsync(catRequest);
+
+        catRequest.Reference = 5;
+        catalogMaritalStatuses = await _genericCatalog.GetCatalogValueAsync(catRequest);
+    }
+
+    private async Task GetDataBinderTables()
+    {
+        var dbindRequest = new DataBinderRequest { Status = 1 };
+
+        occupations = await _dataBinder.GetOccupationsAsync(dbindRequest);
+        countries = await _dataBinder.GetCountriesAsync(dbindRequest);
+        states = await _dataBinder.GetStatesAsync(dbindRequest);
+        cities = await _dataBinder.GetCitiesAsync(dbindRequest);
+    }
+
+    #endregion
+
+    #region Search Engine
+
+    protected string search = "";
+    protected async Task Search()
+    {
+        participants = await _participant.SelectBySearchParticipantAsync(GetSearchSetup());
+        count = participants.Count;
+    }
+
+    private ParticipantSearch GetSearchSetup()
+    {
+        return new ParticipantSearch()
+            {
+                Reference = 0,
+                FieldNumber = fieldSearch,
+                Search = search
+            };
+    }
+
+    protected async Task SelectAllParticipant()
+    {
+        participants = await _participant.SelectAllParticipantAsync();
+        count = participants.Count;
+    }
+
+    #endregion
+
+    #region Grid Events
+
+    protected int count = 0;
+    protected bool isLoading = true;
+
+    protected async Task GridListLoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+        ClearErrorMessage();
+        await SelectAllParticipant();
+        await gridParticipant.GoToPage(0);
+        count = participants.Count;
+        isLoading = false;
+    }
+
+    #endregion
+
+    #region CRUD Events
+
+    private async Task ReloadParticipants()
+    {
+        isLoading = true;
+        await Search();
+        if (participants[0].par_Reference == 0)
+        {
+            ShowErrorMessage(participants[0].par_Name);
+            isLoading = false;
+            return;
+        }
+        count = participants.Count();
+        await InvokeAsync(StateHasChanged);
+        isLoading = false;
+    }
+
+    protected string editModeMessage = "";
+    protected bool isEditMode = false;
+    protected bool showEditFrame = false;
+
+    private void ChangeEditFrame(bool isEditing)
+    {
+        showEditFrame = isEditing;
+        sizeMD = isEditing ? 4 : 12;
+    }
+
+    private async Task UpdateRecordContents(Participant participantRecord, bool isEditing)
+    {
+        ClearErrorMessage();
+        editModeMessage = isEditing ? userIsReadOnly ? resMessage.GetString("wrdRecordContents") : resMessage.GetString("wrdUpdatingRecord")
+                                                     : resMessage.GetString("wrdInsertingRecord");
+        isEditMode = isEditing;
+        participant = participantRecord;
+
+        FilterBirthPlace();
+        if (participant.par_BirthcryReference == 1)
+        {
+            var dbindRequest = new DataBinderRequest { Reference = participant.par_BirthctyReference };
+            stateBirth = await _dataBinder.GetCityStateAsync(dbindRequest);
+            await FilterCities();
+        }
+    }
+
+    protected async Task AddRecord(MouseEventArgs args)
+    {
+        selectedParticipants = null;
+        ChangeEditFrame(true);
+        await UpdateRecordContents(new Participant(), false);
+        CheckParticipantCountingAdd();
+    }
+
+    private async Task EditRecordEvents()
+    {
+        if (!checkSelected()) { return; }
+        ChangeEditFrame(true);
+        await UpdateRecordContents(participant, true);
+        await CheckParticipantCounting();
+    }
+
+    private async Task CheckParticipantCounting()
+    {
+        var addressRequest = new AddressRequest()
+            {
+                addressOrigin = AddressOrigin.Participant,
+                Reference = participant.par_Reference,
+                addressType = AddressType.Residential,
+                isMainAddress = true,
+            };
+        var size = await _participantAddress.GetParticipantAddressCount(addressRequest);
+        buttonStyleAd = CheckButtonStyle(size);
+        // size = await _participantAddress.GetParticipantDocumentCount(addressRequest);
+        // buttonStyleDc = CheckButtonStyle(size);
+        // size = await _participantAddress.GetParticipantBankAccountCount(addressRequest);
+        // buttonStyleBA = CheckButtonStyle(size);
+    }
+
+    private void CheckParticipantCountingAdd()
+    {
+        buttonStyleAd = CheckButtonStyle(0);
+        // buttonStyleDc = CheckButtonStyle(0);
+        // buttonStyleBA = CheckButtonStyle(0);
+        
+    }
+
+    private ButtonStyle CheckButtonStyle(int size)
+    {
+        return size > 0 ? ButtonStyle.Secondary : ButtonStyle.Dark;
+    }
+
+    protected async Task EditRecord(MouseEventArgs args)
+    {
+        await EditRecordEvents();
+    }
+
+    protected async Task SelectRecord(DataGridRowMouseEventArgs<Participant> args)
+    {
+        await EditRecordEvents();
+    }
+
+    protected async Task DeleteRecord(MouseEventArgs args)
+    {
+        if (!checkSelected()) { return; }
+        ClearErrorMessage();
+        if (await GetConfirmation())
+        {
+            var deleteResult = await _participant.DeleteParticipantAsync(participant.par_Reference);
+            if (deleteResult.IsError())
+            {
+                ShowErrorMessage(deleteResult.GetErrorResult().errorMessage);
+                return;
+            }
+            await SelectAllParticipant();
+        }
+    }
+
+    protected async Task SaveRecord()
+    {
+        var participantResult = isEditMode ? await _participant.UpdateParticipantAsync(participant)
+                                           : await _participant.AddParticipantAsync(participant);
+        if (participantResult.IsError())
+        {
+            string ErrorMessage = participantResult.GetErrorResult().errorCode + " :: " + participantResult.GetErrorResult().errorMessage;
+            await ShowAlert(ErrorMessage);
+            return;
+        }
+        ChangeEditFrame(false);
+        await SelectAllParticipant();
+    }
+
+    protected void CancelEdit(MouseEventArgs args)
+    {
+        ChangeEditFrame(false);
+        ClearErrorMessage();
+    }
+
+    #endregion
+
+    #region Check Selection
+
+    private bool checkSelected()
+    {
+        if ((selectedParticipants is not null) && (selectedParticipants.Count >= 1))
+        {
+            participant = selectedParticipants[0];
+            return true;
+        }
+        return false;
+    }
+
+    #endregion
+
+    #region Dimensional Tables
+
+    protected async Task FilterCities()
+    {
+        var dbindRequest = new DataBinderRequest { Reference = stateBirth };
+        cities = await _dataBinder.GetCitiesAsync(dbindRequest);
+    }
+
+    protected void FilterBirthPlace()
+    {
+        isBrazil = (participant.par_BirthcryReference == 1);
+        if (isBrazil)
+        {
+            participant.par_BirthForeignPlace = "";
+            return;
+        }
+        participant.par_BirthctyReference = 0;
+        stateBirth = 0;
+    }
+
+    #endregion
+
+    #region Report Generation
+
+    private static string reportPrefix = "gP2osParticipants";
+
+    protected bool isRunning { get; set; } = false;
+    protected List<ReportRecord> reports { get; set; } = new List<ReportRecord>();
+    protected int reportNumber { get; set; } = 0;
+
+    private void GetReports()
+    {
+        reports = ReportActions.GetReportModels(_reportService.ReportPath, reportPrefix, _reportService.resLanguageId);
+        reportNumber = (reports.Count == 0) ? 0 : 1;
+    }
+
+    protected async Task GenerateReport()
+    {
+        if (reportNumber == 0) { return; }
+        isRunning = true;
+        
+        ReportRecord oRecord = reports.Where(r => r.reportNumber == reportNumber).First();
+        _reportService.ReportFilename = oRecord.reportFile;
+        _reportService.ReportTitle = oRecord.reportTitle;
+        _reportService.userId = _authState.GivenName();
+        _reportService.userName = _authState.Name();
+
+        try
+        {
+            _reportService.ClearDataSet();
+
+            UserDataSchemaRequest udsr = new() { Reference = 0, TableName = _reportService.REPORT_USER_DATASCHEMA };
+            _reportService.ReportDataSet.Tables.Add(await _userDataSchema.SelectDTUserDataSchema(udsr));
+
+            _reportService.ReportDataSet.Tables.Add(await _participant.SelectAllDTParticipantAsync(_reportService.REPORT_MAIN_TABLENAME, GetSearchSetup()));
+        }
+        catch (Exception ex)
+        {
+            ShowErrorMessage(ex.Message);
+            isRunning = false;
+            return;
+        }
+
+        navigation.NavigateTo(RouteCatalog.participantReport);
+    }
+
+    #endregion
+
+    #region Error Message
+
+    private bool showMessage = false;
+    private string errorMessage = "";
+
+    private void ShowErrorMessage(string errMessage)
+    {
+        errorMessage = errMessage;
+        showMessage = true;
+    }
+
+    private void ClearErrorMessage()
+    {
+        showMessage = false;
+        errorMessage = "";
+    }
+
+    #endregion
+
+    #region Display Messages
+
+    private async Task ShowAlert(string errorMessage)
+    {
+        string sTitle = resDomainParticipants.GetString("wrdgP2os") + ". " + resMessage.GetString("msgWarningTitle");
+        AlertOptions oOptions = new()
+            {
+                OkButtonText = resMessage.GetString("wrdOk"),
+            };
+        await dialogService.Alert(errorMessage, sTitle, oOptions);
+    }
+
+    private async Task<bool> GetConfirmation(string messageDescription = "")
+    {
+        string sTitle = resDomainParticipants.GetString("wrdgP2os") + ". " + resMessage.GetString("msgConfirmTitle");
+        string sMessage = string.IsNullOrEmpty(messageDescription) ? resMessage.GetString("msgDeleteConfirmation")
+                                                                   : messageDescription;
+        ConfirmOptions oOptions = new()
+            {
+                CancelButtonText = resMessage.GetString("wrdCancel"),
+                OkButtonText = resMessage.GetString("wrdOk"),
+
+            };
+        return await dialogService.Confirm(sMessage, sTitle, oOptions) == true;
+    }
+
+    #endregion
+
+    #region Record Search
+
+    private void LoadRecordSearch()
+    {
+        fieldsSearch = new List<RecordSearch>()
+        {
+            // new(0, resMessage.GetString("wrdAllSectedFields")),
+            new(1, resParticipant.GetString("wrdName")),
+            new(2, resParticipant.GetString("wrdBirthDate")),
+            new(3, resParticipant.GetString("wrdAffiliationMother")),
+            new(4, resParticipant.GetString("wrdAffiliationFather")),
+            new(5, resParticipant.GetString("wrdPrivatePhone")),
+            new(6, resParticipant.GetString("wrdBusinessPhone"))
+        };
+    }
+
+    #endregion
+
+    #region Particpant Events
+
+    public async Task CallAddress()
+    {
+        if (!checkSelected()) { return; }
+
+        await dialogService.OpenAsync<ParticipantAddress>(
+            $"{resParticipant.GetString("wrdAddress")} :: {participant.par_Name.ToUpper()}",
+            new Dictionary<string, object>() { { "parReference", participant.par_Reference } },
+            new DialogOptions()
+                {
+                    Resizable = false,
+                    Draggable = false,
+                    ShowClose = false,
+                    AutoFocusFirstElement = true,
+                    Width = "700px",
+                    Height = "500px",
+                    Left = "calc(50% - 350px)",
+                    Top = "calc(50% - 256px)"
+                }
+        );
+    }
+
+    public async Task CallDocument()
+    {
+        await Task.Delay(100);
+    }
+
+    public async Task CallBankAccount()
+    {
+        await Task.Delay(100);
+    }
+
+    #endregion
+}

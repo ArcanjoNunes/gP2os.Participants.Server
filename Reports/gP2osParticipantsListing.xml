@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<shepOSSetup>
+  <shepOSLanguage>
+    <lang0>Contato</lang0>
+    <lang1>Contacto</lang1>
+    <lang2>Contact</lang2>
+  </shepOSLanguage>
+  <shepOSGlobalization>
+    <lang0>PARTICIPANTES - CONTATO;ID;Nome;Telefone;</lang0>
+    <lang1>PARTICIPANTES - CONTACTO;ID;Nombre;Teléfono;</lang1>
+  </shepOSGlobalization>
+</shepOSSetup>

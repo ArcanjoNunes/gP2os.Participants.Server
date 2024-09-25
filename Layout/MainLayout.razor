@@ -1,0 +1,165 @@
+@inherits LayoutComponentBase
+
+@inject CookieThemeService CookieThemeService
+@inject ThemeService ThemeService
+
+@inject gP2Navigation navigation
+
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject ILocalStorageService localStorage
+
+@inject SecurityAuthState authState
+
+@inject IStringLocalizer<ResMessage> resMessage
+@inject IStringLocalizer<ResDomainParticipants> resDomainParticipants
+
+
+<RadzenComponents />
+
+<RadzenLayout style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body' 'rz-sidebar rz-footer';">
+    <RadzenHeader>
+        <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenColumn Size="10">
+                <RadzenSidebarToggle Click="@OnSidebarToggleAsync"></RadzenSidebarToggle>
+            </RadzenColumn>
+            <RadzenColumn Size="2">
+                <RadzenStack AlignItems="AlignItems.End" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-px-2">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" class="rz-p-sm-2" Visible="false">
+                        <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@ThemeService.Theme" ValueChanged="@OnChangeTheme" Data="@Themes.All" 
+                                        TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value)>
+                        </RadzenDropDown>
+                    </RadzenStack>
+                    <RadzenStack Style="width: 200px; margin: 5px; height: 20px; padding: 9px;"
+                                 AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                        <RadzenText Text="" TextStyle="Radzen.Blazor.TextStyle.Body2"
+                                    TextAlign="Radzen.TextAlign.Center">
+                            @authState.givenName
+                        </RadzenText>
+                    </RadzenStack>
+                    <RadzenToggleButton Style="margin-left: auto; margin-right: 1rem;"
+                                        Icon=@(authState.isAuthenticated ? "logout" : "login")
+                                        Variant=Radzen.Variant.Text ButtonStyle=ButtonStyle.Base ToggleButtonStyle=ButtonStyle.Base ToggleShade=Shade.Default
+                                        Change=@OnChangeLog />
+                    <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-px-2">
+                        <RadzenAppearanceToggle onchange=""  />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenHeader>
+    <RadzenBody Expanded="@isSideBarExpanded">
+        <RadzenRow class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
+            <RadzenColumn Size="12">
+            @Body
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenBody>
+    <RadzenSidebar Expanded="@isSideBarExpanded" style="z-index: 2">
+        <RadzenStack AlignItems="Radzen.AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
+            <RadzenImage Path="images/logo.png"  style="width: 48px; height: 48px;" AlternateText="AppLogo"></RadzenImage>
+            <RadzenText Text=@systemTitle TextStyle="Radzen.Blazor.TextStyle.Subtitle1" class="rz-mb-0" style="color: var(--rz-sidebar-color);" />
+        </RadzenStack>
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Icon="dashboard" Text="Dashboard" Path="/" />
+            <RadzenPanelMenuItem Icon="account_circle" Text=@resDomainParticipants.GetString("mnuParticipantRecord") Path=@(RouteCatalog.participantRecord) Visible="@authState.isAuthorized" />
+            <RadzenPanelMenuItem Icon="account_child" Text=@resDomainParticipants.GetString("mnuParticipantBeneficiary") Path="" Visible="@authState.isAuthorized" />
+            <RadzenPanelMenuItem Icon="location_home" Text=@resDomainParticipants.GetString("mnuParticipantAddress") Path="" Visible="@authState.isLGPD" />
+            <RadzenPanelMenuItem Icon="contact_phone" Text=@resDomainParticipants.GetString("mnuParticipantContact") Path="" Visible="@authState.isLGPD" />
+            <RadzenPanelMenuItem Icon="folder_shared" Text=@resDomainParticipants.GetString("mnuParticipantDocument") Path="" Visible="@authState.isLGPD" />
+            <RadzenPanelMenuItem Icon="perm_contact_calendar" Text=@resDomainParticipants.GetString("mnuParticipantEvent") Path="" Visible="@authState.isAuthorized" />
+            <RadzenPanelMenuItem Icon="payments" Text=@resDomainParticipants.GetString("mnuParticipantLoan") Path="" Visible="@authState.isAuthorized" />
+            <RadzenPanelMenuItem Icon="group_remove" Text=@resDomainParticipants.GetString("mnuParticipantExclusion") Path="" Visible="@authState.isAuthorized" />
+        </RadzenPanelMenu>
+        <RadzenCard class="rz-border-radius-4" Style="background-color:transparent;">
+            <RadzenStack AlignItems="Radzen.AlignItems.Center" Gap="0" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
+                <RadzenText Text="@systemVersion" TextStyle="Radzen.Blazor.TextStyle.Caption" TagName="Radzen.Blazor.TagName.P" TextAlign="Radzen.TextAlign.Center" 
+                            Style=" color:orange;"/>
+                <RadzenText Text="@systemVersionYear" TextStyle="Radzen.Blazor.TextStyle.Caption" class="rz-mb-0" TagName="Radzen.Blazor.TagName.P" TextAlign="Radzen.TextAlign.Center" 
+                            Style=" color:orange;" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenSidebar>
+    <RadzenFooter>
+        <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="1" Visible="false">
+            <RadzenColumn Size="4" class="rz-shadow-3 rz-border-radius-4" Style="background-color: black">
+                <RadzenText Text="" TextStyle="Radzen.Blazor.TextStyle.Body2" Style="color:cyan;" class="rz-m-2"
+                            TextAlign="Radzen.TextAlign.Center">
+                    @messageSystem
+                </RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="4" class="rz-shadow-3 rz-border-radius-4" Style="background-color:darkblue">
+                <RadzenText Text="" TextStyle="Radzen.Blazor.TextStyle.Body2" Style="color:orange;" class="rz-m-2"
+                            TextAlign="Radzen.TextAlign.Center">
+                    @messageMail
+                </RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="4" class="rz-shadow-3 rz-border-radius-4" Style="background-color: indigo">
+                <RadzenText Text="" TextStyle="Radzen.Blazor.TextStyle.Body2" Style="color:greenyellow;" class="rz-m-2"
+                            TextAlign="Radzen.TextAlign.Center">
+                    @messageTask
+                </RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenFooter>
+</RadzenLayout>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    protected string systemTitle { get; set; } = default!;
+    protected string systemVersion { get; set; } = default!;
+    protected string systemVersionYear { get; set; } = default!;
+
+    protected bool isAuthenticated { get; set; } = false;
+    protected bool isSideBarExpanded { get; set; }
+
+    protected string messageSystem { get; set; } = ":";
+    protected string messageMail { get; set; } = "::";
+    protected string messageTask { get; set; } = ":::";
+
+    protected override async Task OnInitializedAsync()
+    {
+        systemTitle = resMessage.GetString("wrdSystemKey") + "." + resMessage.GetString("msgDomainName");
+        systemVersion = systemTitle + " " + resMessage.GetString("msgParticipantVersion");
+        systemVersionYear = " Ⓒ " + DateTime.Now.Year.ToString() + ", UnaSoft.";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (authenticationState is not null)
+        {
+            var authentState = await authenticationState;
+            authState.Initialize(authentState);
+        }
+        isAuthenticated = authState.isAuthenticated;
+        isSideBarExpanded = await localStorage.GetItemAsync<bool>("IsSideBarExpanded");
+        StateHasChanged();
+    }
+
+    protected async Task OnSidebarToggleAsync()
+    {
+        isSideBarExpanded = !isSideBarExpanded;
+        await localStorage.SetItemAsync("IsSideBarExpanded", isSideBarExpanded);
+    }
+
+    protected void OnChangeLog()
+    {
+        if (authState.isAuthenticated)
+        {
+            navigation.NavigateTo("/00270cf63f93c307e7e9d2cc7e639fa50aca58eeb64be3266a798c9c19535219");
+            return;
+        }
+
+        navigation.NavigateTo("/6054d812d4714c8afbbf2a3bdd6b9e97bc0d91e30fdab7b39b6d9ce8aa1d071f");
+    }
+
+    protected async Task OnChangeTheme(string value)
+    {
+        ThemeService.SetTheme(value);
+    }
+}

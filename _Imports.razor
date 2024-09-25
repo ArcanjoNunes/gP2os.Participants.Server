@@ -1,0 +1,57 @@
+@using System.Net.Http
+@using System.Text.Json
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+@using Microsoft.Extensions.Localization
+
+@using Microsoft.JSInterop
+
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+
+@using FastReport
+@using FastReport.Web
+@using FastReport.Web.Blazor.Components
+
+@using Blazored.LocalStorage
+
+@using Radzen
+@using Radzen.Blazor
+
+@using gP2os.Helpers.Models
+
+@using gP2os.ReportLib.Models
+
+@using gP2os.Domain.GenericTable.Application.Interfaces;
+
+@using gP2os.Domain.DataBinder.Domain.Entities
+@using gP2os.Domain.DataBinder.Domain.Enums;
+@using gP2os.Domain.DataBinder.Domain.Models
+
+@using gP2os.Domain.DataSchema.Domain.Models
+
+@using gP2os.Domain.Participants.Application.Interfaces
+@using gP2os.Domain.Participants.Domain.Entities
+@using gP2os.Domain.Participants.Domain.Models
+@using gP2os.Domain.Participants.Domain.ValueObjects
+@using gP2os.Domain.Participants.Domain.Enums
+
+@using gP2os.Domain.User.AuthProviders
+@using gP2os.Domain.User.Models
+
+@using gP2os.Participants
+@using gP2os.Participants.Components
+@using gP2os.Participants.Layout
+@using gP2os.Participants.Localization
+@using gP2os.Participants.Localization.Layout
+@using gP2os.Participants.Localization.Pages.Participants
+@using gP2os.Participants.Localization.Pages.Users
+@using gP2os.Participants.Helpers
+@using gP2os.Participants.Pages
+@using gP2os.Participants.ReportGenerator.Components
+

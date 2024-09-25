@@ -1,0 +1,30 @@
+@page "/"
+@inject IStringLocalizer<ResDashboard> resDashboard
+
+<PageTitle></PageTitle>
+<RadzenRow Gap="5" RowGap="5">
+    <RadzenColumn Size="12">
+        <RadzenText Text=@resDashboard.GetString("wrdWelcome") TextStyle="Radzen.Blazor.TextStyle.DisplayH2" TagName="Radzen.Blazor.TagName.Auto"></RadzenText>
+        <RadzenText Text=@resDashboard.GetString("wrdLema") TextStyle="Radzen.Blazor.TextStyle.H4" TagName="Radzen.Blazor.TagName.H2" class="mt-5"></RadzenText>
+        <RadzenCard Style="margin-top: 40px; padding: 20px 40px 40px;">
+            <RadzenRow>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenIcon Icon="smart_button" Style="margin-top: 20px; width: 48px; height: 48px; font-size: 48px; color: var(--rz-text-title-color);"></RadzenIcon>
+                    <RadzenText Text=@resDashboard.GetString("wrdDocument") TextStyle="Radzen.Blazor.TextStyle.DisplayH6" TagName="Radzen.Blazor.TagName.H3"></RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenIcon Icon="code" Style="margin-top: 20px; width: 48px; height: 48px; font-size: 48px; color: var(--rz-text-title-color);"></RadzenIcon>
+                    <RadzenText Text=@resDashboard.GetString("wrdTutorial") TextStyle="Radzen.Blazor.TextStyle.DisplayH6" TagName="Radzen.Blazor.TagName.H3"></RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenIcon Icon="people_outline" Style="margin-top: 20px; width: 48px; height: 48px; font-size: 48px; color: var(--rz-text-title-color);"></RadzenIcon>
+                    <RadzenText Text=@resDashboard.GetString("wrdForum") TextStyle="Radzen.Blazor.TextStyle.DisplayH6" TagName="Radzen.Blazor.TagName.H3"></RadzenText>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+    </RadzenColumn>
+</RadzenRow>
+
+@code {
+}
+
