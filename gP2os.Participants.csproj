@@ -29,4 +29,8 @@
     <ProjectReference Include="..\..\..\gP2os\gP2os.ReportLib\gP2os.ReportLib.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.WebConn\gP2os.WebConn\gP2os.WebConn.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Screenshot\" />
+  </ItemGroup>
 </Project>
