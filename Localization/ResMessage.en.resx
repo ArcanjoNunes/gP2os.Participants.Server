@@ -238,4 +238,10 @@
   <data name="wrdAllSectedFields" xml:space="preserve">
     <value>All selected.</value>
   </data>
+  <data name="msgInvalidZipCode" xml:space="preserve">
+    <value>Invalid Zip Code.</value>
+  </data>
+  <data name="wrdSearch" xml:space="preserve">
+    <value>Seeks...</value>
+  </data>
 </root>

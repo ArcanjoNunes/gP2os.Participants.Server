@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\gP2os.ACL\gP2os.ACL.Mail\gP2os.ACL.Mail.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.DataBinder\gP2os.Domain.DataBinder.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.DataSchema\gP2os.Domain.DataSchema.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.GenericTable\gP2os.Domain.GenericTable.csproj" />

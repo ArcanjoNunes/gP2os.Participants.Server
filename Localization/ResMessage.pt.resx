@@ -258,4 +258,10 @@
   <data name="wrdAllSectedFields" xml:space="preserve">
     <value>Todos os selecionados.</value>
   </data>
+  <data name="msgInvalidZipCode" xml:space="preserve">
+    <value>CEP Inválido.</value>
+  </data>
+  <data name="wrdSearch" xml:space="preserve">
+    <value>Busca...</value>
+  </data>
 </root>

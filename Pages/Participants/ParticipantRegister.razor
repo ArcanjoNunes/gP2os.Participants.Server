@@ -265,8 +265,12 @@
                                               Click="@CallBankAccount" Disabled="@(!isEditMode)" Visible="false" />
                             </RadzenColumn>
                             <RadzenColumn SizeMD="3" class="rz-py-1" Style="margin-top:0.1rem;" >
-                                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="save" Text=@resMessage.GetString("wrdSave") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" Click="@SaveRecord" />
-                                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" Text=@resMessage.GetString("wrdCancel") Variant="Radzen.Variant.Flat" class="rz-border-radius-4" Click="@CancelEdit" />
+                                <RadzenButton Text=@resMessage.GetString("wrdSave") 
+                                              ButtonStyle="ButtonStyle.Warning" Shade="Shade.Darker" Icon="save" Variant="Radzen.Variant.Flat" 
+                                              class="rz-border-radius-4" Click="@SaveRecord" />
+                                <RadzenButton Text=@resMessage.GetString("wrdCancel")
+                                              ButtonStyle="ButtonStyle.Light" Icon="cancel" Variant="Radzen.Variant.Flat" 
+                                              class="rz-border-radius-4" Click="@CancelEdit" />
                             </RadzenColumn>
                         </RadzenRow>
                     </RadzenCard>
@@ -377,10 +381,10 @@
     {
         var dbindRequest = new DataBinderRequest { Status = 1 };
 
-        occupations = await _dataBinder.GetOccupationsAsync(dbindRequest);
-        countries = await _dataBinder.GetCountriesAsync(dbindRequest);
-        states = await _dataBinder.GetStatesAsync(dbindRequest);
-        cities = await _dataBinder.GetCitiesAsync(dbindRequest);
+        occupations = (await _dataBinder.GetOccupationsAsync(dbindRequest)).occupationContent;
+        countries = (await _dataBinder.GetCountriesAsync(dbindRequest)).countryContent;
+        states = (await _dataBinder.GetStatesAsync(dbindRequest)).stateContent;
+        cities = (await _dataBinder.GetCitiesAsync(dbindRequest)).cityContent;
     }
 
     #endregion
@@ -468,7 +472,7 @@
         if (participant.par_BirthcryReference == 1)
         {
             var dbindRequest = new DataBinderRequest { Reference = participant.par_BirthctyReference };
-            stateBirth = await _dataBinder.GetCityStateAsync(dbindRequest);
+            stateBirth = (await _dataBinder.GetCityStateAsync(dbindRequest)).stateContent.SteReference;
             await FilterCities();
         }
     }
@@ -586,7 +590,7 @@
     protected async Task FilterCities()
     {
         var dbindRequest = new DataBinderRequest { Reference = stateBirth };
-        cities = await _dataBinder.GetCitiesAsync(dbindRequest);
+        cities = (await _dataBinder.GetCitiesAsync(dbindRequest)).cityContent;
     }
 
     protected void FilterBirthPlace()

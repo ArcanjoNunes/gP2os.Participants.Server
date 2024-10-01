@@ -1,3 +1,7 @@
+using gP2os.ACL.Mail.BrasilApi;
+using gP2os.ACL.Mail.BrasilApi.Models;
+using gP2os.ACL.Mail.ViaCEP;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
@@ -49,6 +53,9 @@ builder.Services.AddScoped<IDataBinderRepository, DataBinderRepository>();
 builder.Services.AddScoped<CheckAuthToken>();
 
 builder.Services.AddSingleton<ReportService>();
+
+builder.Services.AddScoped<BrasilApi>();
+builder.Services.AddScoped<ViaCEP>();
 
 var app = builder.Build();
 

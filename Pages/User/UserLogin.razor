@@ -90,8 +90,8 @@
             return;
         }
         ShowMessage(userAccess.MessageKey);
+        //await InvokeAsync(StateHasChanged);
         isBusy = false;
-        //StateHasChanged();
     }
 
     void ShowMessage(string messageKey)

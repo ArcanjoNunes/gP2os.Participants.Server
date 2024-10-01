@@ -67,9 +67,9 @@
             <RadzenPanelMenuItem Icon="dashboard" Text="Dashboard" Path="/" />
             <RadzenPanelMenuItem Icon="account_circle" Text=@resDomainParticipants.GetString("mnuParticipantRecord") Path=@(RouteCatalog.participantRecord) Visible="@authState.isAuthorized" />
             <RadzenPanelMenuItem Icon="account_child" Text=@resDomainParticipants.GetString("mnuParticipantBeneficiary") Path="" Visible="@authState.isAuthorized" />
-            <RadzenPanelMenuItem Icon="location_home" Text=@resDomainParticipants.GetString("mnuParticipantAddress") Path="" Visible="@authState.isLGPD" />
-            <RadzenPanelMenuItem Icon="contact_phone" Text=@resDomainParticipants.GetString("mnuParticipantContact") Path="" Visible="@authState.isLGPD" />
-            <RadzenPanelMenuItem Icon="folder_shared" Text=@resDomainParticipants.GetString("mnuParticipantDocument") Path="" Visible="@authState.isLGPD" />
+            <RadzenPanelMenuItem Icon="location_home" Text=@resDomainParticipants.GetString("mnuParticipantAddress") Path="" Visible="@authState.isGDPR" />
+            <RadzenPanelMenuItem Icon="contact_phone" Text=@resDomainParticipants.GetString("mnuParticipantContact") Path="" Visible="@authState.isGDPR" />
+            <RadzenPanelMenuItem Icon="folder_shared" Text=@resDomainParticipants.GetString("mnuParticipantDocument") Path="" Visible="@authState.isGDPR" />
             <RadzenPanelMenuItem Icon="perm_contact_calendar" Text=@resDomainParticipants.GetString("mnuParticipantEvent") Path="" Visible="@authState.isAuthorized" />
             <RadzenPanelMenuItem Icon="payments" Text=@resDomainParticipants.GetString("mnuParticipantLoan") Path="" Visible="@authState.isAuthorized" />
             <RadzenPanelMenuItem Icon="group_remove" Text=@resDomainParticipants.GetString("mnuParticipantExclusion") Path="" Visible="@authState.isAuthorized" />
