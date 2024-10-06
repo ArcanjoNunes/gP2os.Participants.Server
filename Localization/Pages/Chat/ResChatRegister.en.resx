@@ -97,37 +97,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="wrdgP2os" xml:space="preserve">
-    <value>gP2os</value>
+  <data name="wrdFromName" xml:space="preserve">
+    <value>From</value>
   </data>
-  <data name="wrdParticipantManager" xml:space="preserve">
-    <value>Gestão de Participantes</value>
+  <data name="wrdToName" xml:space="preserve">
+    <value>To</value>
   </data>
-  <data name="mnuParticipantBeneficiary" xml:space="preserve">
-    <value>Registro de Beneficiário</value>
+  <data name="wrdMessage" xml:space="preserve">
+    <value>Message</value>
   </data>
-  <data name="mnuParticipantAddress" xml:space="preserve">
-    <value>Catálogo de Endereço</value>
+  <data name="wrdRead" xml:space="preserve">
+    <value>Read</value>
   </data>
-  <data name="mnuParticipantDocument" xml:space="preserve">
-    <value>Documento</value>
+  <data name="wrdSendDate" xml:space="preserve">
+    <value>Send Date</value>
   </data>
-  <data name="mnuParticipantLoan" xml:space="preserve">
-    <value>Registro de Empréstimo</value>
+  <data name="wrdReference" xml:space="preserve">
+    <value>Reference</value>
   </data>
-  <data name="mnuParticipantExclusion" xml:space="preserve">
-    <value>Eventos de Exclusão</value>
-  </data>
-  <data name="mnuParticipantEvent" xml:space="preserve">
-    <value>Eventos do Participante</value>
-  </data>
-  <data name="mnuParticipantContact" xml:space="preserve">
-    <value>Mídias de Contatos</value>
-  </data>
-  <data name="mnuParticipantRecord" xml:space="preserve">
-    <value>Registro Geral</value>
-  </data>
-  <data name="mnuChatManager" xml:space="preserve">
-    <value>Gestor de Chat</value>
+  <data name="wrdChatManager" xml:space="preserve">
+    <value>Chat Manager</value>
   </data>
 </root>

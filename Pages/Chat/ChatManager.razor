@@ -1,0 +1,375 @@
+﻿@page "/chatmanager"
+
+@inject DialogService dialogService
+@inject gP2Navigation navigation
+
+@inject IStringLocalizer<ResMessage> resMessage
+@inject IStringLocalizer<ResDomainParticipants> resDomainParticipants
+@inject IStringLocalizer<ResChatRegister> resChatRegister
+
+@inject CheckAuthToken _authToken
+@inject SecurityAuthState _authState
+
+@inject IGenericTableStatusRepository _genericStatus
+@inject IChatUserRepository _chatUser
+@inject IChatRegisterRepository _chatRegister
+
+@inject IUserDirectoryRepository _userDirectory
+
+<PageTitle>@resDomainParticipants.GetString("wrdgP2os"). @resChatRegister.GetString("wrdChatManager")</PageTitle>
+
+<RadzenStack Gap="0.1rem">
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Stretch"
+                     Gap="1rem" class="rz-py-1" Style="margin-top:0.1rem;">
+            <RadzenButton Text="Users Register"
+                          ButtonStyle="ButtonStyle.Light" Shade="Shade.Darker" Icon="contact_page" Variant="Radzen.Variant.Flat"
+                          class="rz-border-radius-3" />
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Darker" Icon="groups" Text="Group Catalog" Variant="Radzen.Variant.Flat"
+                          class="rz-border-radius-3" />
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Darker" Icon="group_add" Text="User Group Link" Variant="Radzen.Variant.Flat"
+                          class="rz-border-radius-3" />
+        </RadzenStack>
+    </RadzenCard>
+    <RadzenCard> 
+        <RadzenRow RowGap="1rem">
+            <RadzenColumn Size="5" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+
+                <RadzenFormField Text="Users" Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false" Style="float: left; width: 79%;">
+                    <ChildContent>
+                        <RadzenDropDown @bind-Value=@chatUserReference Name="chatUserSelected" 
+                                        Data=@chatUsers TextProperty="@nameof(ChatUser.ChuTitle)" ValueProperty="@nameof(ChatUser.ChuReference)"
+                                        Multiple=false AllowClear=false Chips=false Style="width: 100%;" />
+
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="Origin" Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false" Style="float: right; width: 20%;">
+                    <ChildContent>
+                        <RadzenDropDown @bind-Value=@userOrigin Name="UserOrigin"
+                                        Data=@statusResponsesOrigin TextProperty="@nameof(StatusResponse.title)" ValueProperty="@nameof(StatusResponse.code)"
+                                        Multiple=false AllowClear=false Chips=false Style="width: 100%" />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="4" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border);">
+                <RadzenFormField Text="From" Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false" Style="float: left; width: 49%">
+                    <ChildContent>
+                        <RadzenDatePicker @bind-Value=@dateFrom Name="dateFrom" Style="width: 100%" AllowClear="true" AllowInput="true"
+                                          DateFormat="d" Change="@CheckDateRange" />
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="To" Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false" Style="float: right; width: 49%">
+                    <ChildContent>
+                        <RadzenDatePicker @bind-Value=@dateTo Name="dateTo" Style="width: 100%" AllowClear="true" AllowInput="true" 
+                                          DateFormat="d" Change="@CheckDateRange" />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="2" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                <RadzenFormField Text="Read" Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false" Style="width: 100%">
+                    <ChildContent>
+                        <RadzenDropDown @bind-Value=@readStatus Name="ReadMessage"
+                                        Data=@statusResponsesRead TextProperty="@nameof(StatusResponse.title)" ValueProperty="@nameof(StatusResponse.code)"
+                                        Multiple=false AllowClear=false Chips=false Style="width: 100%" />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="1" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                <RadzenButton ButtonStyle="ButtonStyle.Success" Shade="Shade.Light" Icon="search" Variant="Radzen.Variant.Flat"
+                            class="rz-border-radius-3" Style="width: 100%; height: 100%;"
+                            Click="@SearhChatRegister" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow Visible="@(!string.IsNullOrEmpty(errorMessage))">
+            <RadzenColumn Size="12" Style="height: 30px">
+                <RadzenAlert Shade="Radzen.Shade.Dark" Variant="Radzen.Variant.Filled" Size="Radzen.AlertSize.Medium"
+                             AlertStyle="Radzen.AlertStyle.Danger" class="rz-p-0 rz-border-radius-2 rz-pl-2" 
+                             Style="width: 100%; height: 100%" AllowClose="false">
+                    @errorMessage
+                </RadzenAlert>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+    <RadzenCard> 
+        <RadzenRow RowGap="1rem">
+            <RadzenColumn Size="12" >
+                <RadzenCard style="height: auto; width: 100%">
+                    <RadzenDataGrid Data="@chatRegisters" TItem="ChatRegisterDto" @bind-Value=@selectedRegisters
+                                    IsLoading="@isLoading" 
+                                    AllowFiltering="false" FilterMode="FilterMode.Advanced" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" 
+                                    AllowPaging="true" PageSize="6" ShowPagingSummary="true" PagingSummaryFormat=@resMessage.GetString("msgPageSummary") 
+                                    Count="@countChatRegister" PagerAlwaysVisible="true" PagerHorizontalAlign="HorizontalAlign.Center"
+                                    AllowSorting="true" Style="--rz-grid-selected-background-color: darkorange ; --rz-grid-selected-color: white;"
+                                    SelectionMode="DataGridSelectionMode.Single" 
+                                    RowDoubleClick="@SelectRecord"
+                                    @onclick:stopPropagation="true">
+                        <EmptyTemplate>
+                            <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">@resMessage.GetString("wrdNoRecords").</p>
+                        </EmptyTemplate>
+                        <Columns>
+                            <RadzenDataGridColumn Width="20%" TItem="ChatRegisterDto" Property="ChrChuReferenceFromName" 
+                                                  Title=@resChatRegister.GetString("wrdFromName") />
+                            <RadzenDataGridColumn Width="20%" TItem="ChatRegisterDto" Property="ChrChuReferenceToName" 
+                                                  Title=@resChatRegister.GetString("wrdToName") />
+                            <RadzenDataGridColumn Width="10%" TextAlign="TextAlign.Center" TItem="ChatRegisterDto" Property="ChrSendDate" 
+                                                  Title=@resChatRegister.GetString("wrdSendDate") FormatString="{0:d}" />
+                            <RadzenDataGridColumn Width="40%" TItem="ChatRegisterDto" Property="ChrMessage" 
+                                                  Title=@resChatRegister.GetString("wrdMessage") />
+                            <RadzenDataGridColumn Width="10%" TextAlign="TextAlign.Center" TItem="ChatRegisterDto" Property="ChrReadStatus" 
+                                                  Title=@resChatRegister.GetString("wrdRead") />
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+    <RadzenCard> 
+        <RadzenRow RowGap="1rem">
+            <RadzenColumn SizeMD="3" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                <RadzenFormField Text=@resChatRegister.GetString("wrdToName") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                 Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenDropDown @bind-Value=@chatReferenceTo Name="chatTo"
+                                        Data=@chatUsers TextProperty="@nameof(ChatUser.ChuTitle)" ValueProperty="@nameof(ChatUser.ChuReference)"
+                                        Multiple=false AllowClear=false Chips=false 
+                                        Style="width: 100%;" />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="8" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                <RadzenFormField Text=@resChatRegister.GetString("wrdMessage") Variant="Radzen.Variant.Outlined" AllowFloatingLabel="false"
+                                 Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenTextBox @bind-Value=@chatMessage Name ="chatMessage"
+                                       Style="width: 100%;" />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="1" class="rz-p-2 rz-border-radius-2" Style="border: var(--rz-grid-cell-border)">
+                <RadzenButton ButtonStyle="ButtonStyle.Success" Shade="Shade.Dark" Icon="send" Variant="Radzen.Variant.Flat"
+                              class="rz-border-radius-3" Style="width: 100%; height: 100%;"
+                              Click="@SendChatMessage" />
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+</RadzenStack>
+
+@code{
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    protected long UserReference = 0;
+    protected int UserOriginClass = 0;
+    protected long UserOriginReference = 0;
+
+    protected int resLanguageId = 0;
+    protected string errorMessage = "";
+
+    protected List<ChatUser> chatUsers = new List<ChatUser>();
+    protected long chatUserReference = 0;
+
+    protected DateTime dateFrom = DateTime.MinValue;
+    protected DateTime dateTo = DateTime.MinValue;
+
+    protected int readStatus = 2;
+    protected List<StatusResponse> statusResponsesRead;
+    protected string[] chatReadStatus;
+
+    protected int userOrigin = 0;
+    protected List<StatusResponse> statusResponsesOrigin;
+
+    protected bool isLoading = false;
+    protected int countChatRegister = 0;
+    protected List<ChatRegisterDto> chatRegisters;
+    protected IList<ChatRegisterDto> selectedRegisters;
+    protected ChatRegisterDto selectedRecord;
+
+    protected long chatReferenceTo = 0;
+    protected string chatMessage = "";
+
+    #region System Events
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        await GetUserOriginCredential();
+
+        await GetGenericTables();
+        await LoadChatUser();
+        await SearhChatRegister(true);
+
+        isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) { return; }
+        if (await _authToken.CheckAuthenticationTokenAsync()) { return; }
+        if (authenticationState is not null)
+        {
+            var authentState = await authenticationState;
+            _authState.Initialize(authentState);
+        }
+    }
+
+    #endregion
+
+    #region Dimensional Tables
+
+    private async Task GetGenericTables()
+    {
+        var stRequest = new StatusRequest { LanguageId = resLanguageId };
+
+        stRequest.Reference = 8;
+        statusResponsesRead = await _genericStatus.GetStatusAsync(stRequest);
+        GetReadStatus();
+
+        stRequest.Reference = 9;
+        statusResponsesOrigin = await _genericStatus.GetStatusAsync(stRequest);
+    }
+
+    private void GetReadStatus()
+    {
+        chatReadStatus = new string[statusResponsesRead.Count];
+        int iIndex = 0;
+        foreach (StatusResponse er in statusResponsesRead)
+        {
+            chatReadStatus[iIndex++] = er.title;
+        }
+    }
+
+    #endregion
+
+    #region User Events
+
+    private async Task GetUserOriginCredential()
+    {
+        UserReference = _authState.userReference;
+        var userDirResponse = await _userDirectory.GetUserDirectory(new UserDirectoryRequest() { userReference = UserReference });
+        if (!userDirResponse.IsOk)
+        {
+            errorMessage = resMessage.GetString(userDirResponse.MessageKey);
+            _authState.isAuthorized = false;
+            return;
+        }
+        UserOriginClass = userDirResponse.UserDirectory.UsrdOriginClass;
+        UserOriginReference = userDirResponse.UserDirectory.UsrdOriginReference;
+    }
+
+    private async Task LoadChatUser()
+    {
+        var chatUserResponse = await _chatUser.ListChatUser(GetFilter());
+        if (!chatUserResponse.IsOk)
+        {
+            errorMessage = chatUserResponse.errorMessage;
+            isLoading = false;
+            return;
+        }
+        chatUsers = chatUserResponse.chatUsers;
+    }
+
+    protected async Task SearhChatRegister()
+    {
+        await SearhChatRegister(false);
+    }
+    protected async Task SearhChatRegister(bool keepLoading)
+    {
+        isLoading = true;
+        errorMessage = "";
+        var chatResponse = await _chatRegister.ListChatRegisterFull(
+            new ChatRegisterRequest()
+                {
+                    UserReference = UserReference,
+                    UserOrigin = userOrigin,
+                    UserDestination = chatUserReference,
+                    DateBegin = dateFrom,
+                    DateEnd = dateTo,
+                    ReadStatus = readStatus
+                }, chatReadStatus);
+        if (!chatResponse.IsOk)
+        {
+            errorMessage = chatResponse.errorMessage;
+            isLoading = keepLoading;
+            return;
+        }
+        chatRegisters = chatResponse.chatRegisters;
+        countChatRegister = chatRegisters.Count;
+        //await InvokeAsync(StateHasChanged);
+        isLoading = keepLoading;
+    }
+
+    private async Task EditRecordEvents()
+    {
+    }
+
+    protected async Task SelectRecord(DataGridRowMouseEventArgs<ChatRegisterDto> args)
+    {
+        await EditRecordEvents();
+    }
+
+    protected async Task SendChatMessage()
+    {
+        if (MessageIsInvalid()) { return; }
+
+        isLoading = true;
+        errorMessage = "";
+        var chatResponse = await _chatRegister.AddChatRegister(
+            new ChatRegister()
+                {
+                    ChrChuReferenceFrom = UserReference,
+                    ChrChuReferenceTo = chatReferenceTo,
+                    ChrMessage = chatMessage,
+                    ChrSendDate = DateTime.Now.Date
+                });
+        if (!chatResponse.IsOk)
+        {
+            errorMessage = chatResponse.errorMessage;
+            isLoading = false;
+            return;
+        }
+        
+        await SearhChatRegister(true);
+        
+        ClearMessage();
+        isLoading = false;
+    }
+
+    #endregion
+
+    #region Inner Events
+
+    protected void CheckDateRange()
+    {
+        if ((dateFrom == DateTime.MinValue) || (dateTo == DateTime.MinValue)) { return; }
+        if (dateFrom > dateTo) 
+        { 
+            dateTo = DateTime.MinValue;
+        }
+    }
+
+    private ChatUserRequest GetFilter()
+    {
+        return new ChatUserRequest()
+            {
+                GroupStatus = 0,
+                Reference = 0,
+                Status = 0,
+                ReferenceExcluded = UserReference,
+                InsertAll = true
+            };
+    }
+
+    private void ClearMessage()
+    {
+        chatReferenceTo = 0;
+        chatMessage = "";
+    }
+
+    private bool MessageIsInvalid()
+    {
+        return (chatReferenceTo == 0) || (string.IsNullOrEmpty(chatMessage));
+    }
+
+    #endregion
+}

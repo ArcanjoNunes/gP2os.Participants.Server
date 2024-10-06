@@ -127,4 +127,7 @@
   <data name="mnuParticipantExclusion" xml:space="preserve">
     <value>Exclusion Events</value>
   </data>
+  <data name="mnuChatManager" xml:space="preserve">
+    <value>Chat Manager</value>
+  </data>
 </root>

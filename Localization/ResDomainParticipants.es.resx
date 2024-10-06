@@ -127,4 +127,7 @@
   <data name="mnuParticipantRecord" xml:space="preserve">
     <value>Registro General</value>
   </data>
+  <data name="mnuChatManager" xml:space="preserve">
+    <value>Gestión de Charla</value>
+  </data>
 </root>

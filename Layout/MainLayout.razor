@@ -37,7 +37,7 @@
                                  AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
                         <RadzenText Text="" TextStyle="Radzen.Blazor.TextStyle.Body2"
                                     TextAlign="Radzen.TextAlign.Center">
-                            @authState.givenName
+                            @authState.userGivenName
                         </RadzenText>
                     </RadzenStack>
                     <RadzenToggleButton Style="margin-left: auto; margin-right: 1rem;"
@@ -73,6 +73,7 @@
             <RadzenPanelMenuItem Icon="perm_contact_calendar" Text=@resDomainParticipants.GetString("mnuParticipantEvent") Path="" Visible="@authState.isAuthorized" />
             <RadzenPanelMenuItem Icon="payments" Text=@resDomainParticipants.GetString("mnuParticipantLoan") Path="" Visible="@authState.isAuthorized" />
             <RadzenPanelMenuItem Icon="group_remove" Text=@resDomainParticipants.GetString("mnuParticipantExclusion") Path="" Visible="@authState.isAuthorized" />
+            <RadzenPanelMenuItem Icon="chat" Text=@resDomainParticipants.GetString("mnuChatManager") Path="/chatmanager" Visible="@authState.isAuthorized" />
         </RadzenPanelMenu>
         <RadzenCard class="rz-border-radius-4" Style="background-color:transparent;">
             <RadzenStack AlignItems="Radzen.AlignItems.Center" Gap="0" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">

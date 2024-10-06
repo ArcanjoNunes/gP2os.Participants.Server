@@ -244,4 +244,7 @@
   <data name="wrdSearch" xml:space="preserve">
     <value>Busca...</value>
   </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>No Encontrado.</value>
+  </data>
 </root>

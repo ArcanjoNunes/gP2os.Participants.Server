@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <NoWarn>CS0168,CS1998,BL9993,CS0649,CS0436,0436</NoWarn>
+    <NoWarn>CS0168,CS1998,BL9993,CS0649,CS0436,0436,RZ10012</NoWarn>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.DataBinder\gP2os.Domain.DataBinder.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.DataSchema\gP2os.Domain.DataSchema.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.GenericTable\gP2os.Domain.GenericTable.csproj" />
+    <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.MessagedIn\gP2os.Domain.MessagedIn.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.Participants\gP2os.Domain.Participants.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Domain\gP2os.Domain.User\gP2os.Domain.User.csproj" />
     <ProjectReference Include="..\..\..\gP2os\gP2os.Helpers\gP2os.Helpers.csproj" />

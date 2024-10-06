@@ -79,11 +79,16 @@
                                                   Click="@EditRecord" @onclick:stopPropagation="true" />
                                 </Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="Participant" Property="par_Reference" Title=@resParticipant.GetString("wrdReference") />
-                            <RadzenDataGridColumn TItem="Participant" Property="par_Name" Title=@resParticipant.GetString("wrdName") />
-                            <RadzenDataGridColumn TItem="Participant" Property="par_BirthDate" Title=@resParticipant.GetString("wrdBirthDate") FormatString="{0:d}" />
-                            <RadzenDataGridColumn TItem="Participant" Property="par_AffiliationMotherName" Title=@resParticipant.GetString("wrdAffiliationMother") />
-                            <RadzenDataGridColumn TItem="Participant" Property="par_CellPhonePrivate" Title=@resParticipant.GetString("wrdPrivatePhone") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_Reference" 
+                                                  Title=@resParticipant.GetString("wrdReference") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_Name" 
+                                                  Title=@resParticipant.GetString("wrdName") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_BirthDate"
+                                                  Title=@resParticipant.GetString("wrdBirthDate") FormatString="{0:d}" />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_AffiliationMotherName" 
+                                                  Title=@resParticipant.GetString("wrdAffiliationMother") />
+                            <RadzenDataGridColumn TItem="Participant" Property="par_CellPhonePrivate"
+                                                  Title=@resParticipant.GetString("wrdPrivatePhone") />
                             <RadzenDataGridColumn TItem="Participant" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
                                 <Template>
                                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium"
@@ -293,10 +298,11 @@
     [CascadingParameter]
     private Task<AuthenticationState> authenticationState { get; set; }
 
-    private RadzenDataGrid<Participant> gridParticipant;
-    private int sizeMD = 12;
     protected bool userIsReadOnly = false;
     protected int resLanguageId = 0;
+
+    private RadzenDataGrid<Participant> gridParticipant;
+    private int sizeMD = 12;
 
     private IList<Participant> selectedParticipants;
     private List<Participant> participants;
@@ -333,12 +339,14 @@
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
+
         LoadRecordSearch();
         GetReports();
         navigation.SaveRoute();
         await GetGenericTables();
         await GetDataBinderTables();
         await SelectAllParticipant();
+
         isLoading = false;
     }
 
@@ -351,7 +359,7 @@
             var authentState = await authenticationState;
             _authState.Initialize(authentState);
         }
-        userIsReadOnly = _authState.IsInRole("READONLY");
+        userIsReadOnly = _authState.isReadOnly;
     }
 
     #endregion
@@ -629,8 +637,8 @@
         ReportRecord oRecord = reports.Where(r => r.reportNumber == reportNumber).First();
         _reportService.ReportFilename = oRecord.reportFile;
         _reportService.ReportTitle = oRecord.reportTitle;
-        _reportService.userId = _authState.GivenName();
-        _reportService.userName = _authState.Name();
+        _reportService.userId = _authState.userGivenName;
+        _reportService.userName = _authState.userName;
 
         try
         {

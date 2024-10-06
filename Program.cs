@@ -1,7 +1,3 @@
-using gP2os.ACL.Mail.BrasilApi;
-using gP2os.ACL.Mail.BrasilApi.Models;
-using gP2os.ACL.Mail.ViaCEP;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
@@ -36,6 +32,9 @@ builder.Services.AddScoped<AuthenticationStateProvider, UserAuthStateProvider>()
 
 builder.Services.AddHttpClient<IUserApiRepository, UserApiRepository>();
 
+builder.Services.AddDbContextFactory<UserDirectoryDBContext>();
+builder.Services.AddScoped<IUserDirectoryRepository, UserDirectoryRepository>();
+
 builder.Services.AddDbContextFactory<gP2osUserDSDBContext>();
 builder.Services.AddScoped<IUserDataSchemaRepository, UserDataSchemaRepository>();
 
@@ -49,6 +48,12 @@ builder.Services.AddScoped<IGenericTableCatalogRepository, GenericTableCatalogRe
 
 builder.Services.AddDbContextFactory<gP2DataBinderDBContext>();
 builder.Services.AddScoped<IDataBinderRepository, DataBinderRepository>();
+
+builder.Services.AddDbContextFactory<ChatDBContext>();
+builder.Services.AddScoped<IChatUserRepository, ChatUserRepository>();
+builder.Services.AddScoped<IChatGroupRepository, ChatGroupRepository>();
+builder.Services.AddScoped<IChatUserGroupRepository, ChatUserGroupRepository>();
+builder.Services.AddScoped<IChatRegisterRepository, ChatRegisterRepository>();
 
 builder.Services.AddScoped<CheckAuthToken>();
 
